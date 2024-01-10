@@ -6,11 +6,11 @@ from statsmodels.tsa.stattools import adfuller
 import yfinance as yf
 
 from statsmodels.tsa.api import VAR
-from sklearn.metrics import mean_squared_error
-from sklearn.metrics import r2_score
+# from sklearn.metrics import mean_squared_error
+# from sklearn.metrics import r2_score
 import numpy as np
 
-class   regresion_ols:
+class  regresion_ols:
 
     def __init__(self, Y, X, constant=True):
         self.Y=Y
@@ -52,11 +52,11 @@ class   regresion_ols:
         res_pred = Y_test - Y_pred
         return res_pred
     
-    def direction_accuracy(Y_test, Y_pred):
-        return np.sum(np.sign(Y_pred) == np.sign(Y_test)) / len(Y_test) * 100
+    # def direction_accuracy(Y_test, Y_pred):
+    #     return np.sum(np.sign(Y_pred) == np.sign(Y_test)) / len(Y_test) * 100
     
-    def r2_score(Y_test, Y_pred):
-        return r2_score(Y_test, Y_pred)
+    # def r2_score(Y_test, Y_pred):
+    #     return r2_score(Y_test, Y_pred)
 
 
     

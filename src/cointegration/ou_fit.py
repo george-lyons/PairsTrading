@@ -43,3 +43,4 @@ class OUFit:
         cointresid_OUFit = pd.DataFrame(self.residuals, columns=['Residuals'])
         cointresid_OUFit = cointresid_OUFit.assign(**self.OU_res)
         return cointresid_OUFit, self.OU_res
+    

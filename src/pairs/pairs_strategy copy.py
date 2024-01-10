@@ -7,7 +7,7 @@ import pandas as pd
 from hurst import compute_Hc
 from statsmodels.regression.linear_model import OLS
 from statsmodels.tsa.stattools import coint
-from src.pairs.functions import ad_fuller,linear_regression,pairwise_engle_granger_coint,ad_fuller_to_df
+from src.pairs.coint_functions import ad_fuller,linear_regression,pairwise_engle_granger_coint,ad_fuller_to_df
 from src.cointegration.linear_regression import regresion_ols
 
 ## Initiate a Pair with a date and lookback window
