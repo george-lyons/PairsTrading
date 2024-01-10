@@ -2,7 +2,18 @@ import pandas as pd
 import yfinance as yf
 
 def get_all_adjusted_close_data(start_date, end_date, tickers):
-    """This function returns a pd dataframe with all of the adjusted closing information"""
+    """
+    Fetches adjusted close prices for a list of ticker symbols over a specified date range.
+
+    Parameters:
+    - start_date (str or datetime): The start date for the data retrieval.
+    - end_date (str or datetime): The end date for the data retrieval.
+    - tickers (list of str): A list of ticker symbols.
+
+    Returns:
+    - pandas.DataFrame: A DataFrame where each column represents the adjusted close prices 
+      for one of the ticker symbols over the specified date range.
+    """
     data = pd.DataFrame()
     names = list()
     for i in tickers:
@@ -11,31 +22,48 @@ def get_all_adjusted_close_data(start_date, end_date, tickers):
     data.columns = names
     return data
 
-def fetch_prices_df(start_date, end_date, ticker_symbol):
-    """This function returns df with yfinance stock data for ticker"""
-    # Fetch the data
-    df = yf.download(ticker_symbol, start=start_date, end=end_date, progress=False)
-    return df
+# class TestTrainData:
+#     def __init__(self, x_train, y_train, x_test, y_test):
+#         self.x_train = x_train
+#         self.y_train = y_train
+#         self.x_test = x_test
+#         self.y_test = y_test     
 
+def get_pivoted_test_train_data(stockY,stockX,end_look_back_date = None,lookback_period=365, train_test_split_ratio=1, normalize=False):
+    """
+    Splits the stock data into training and testing sets based on a pivot date, lookback period, 
+    and train-test split ratio.
 
-def get_pivoted_test_train_data(stockX, stockY,
-                end_look_back_date = None,
-                lookback_period=365,
-                train_test_split_ratio=1):
+    Parameters:
+    - stockX (pandas.Series): Time series data for stock X.
+    - stockY (pandas.Series): Time series data for stock Y.
+    - end_look_back_date (str or datetime, optional): The pivot date to split the data. Defaults to None.
+    - lookback_period (int): Number of days to look back from the pivot date for the training set. 
+    Defaults to 365.
+    - train_test_split_ratio (float): The ratio to determine the length of the test set. 
+    Defaults to 1 (equal to the lookback period).
 
-    #assertions
+    Returns:
+    - tuple: Contains four elements (x_train, y_train, x_test, y_test), each a pandas.Series
+    representing the training and testing sets for stock X and Y
+
+    - 'normalize_start_1' function is used to normalize the stock data, which should be defined elsewhere.
+    """
     indexPivotDate = stockX.index.get_loc(end_look_back_date)
     trainLength = train_test_split_ratio * lookback_period
-
     #Test and train set
-    normalized_x = normalize_start_1(stockX[indexPivotDate - lookback_period:indexPivotDate + trainLength])
-    normalized_y = normalize_start_1(stockY[indexPivotDate - lookback_period:indexPivotDate + trainLength])
+    x_period = stockX[indexPivotDate - lookback_period:indexPivotDate + trainLength]
+    y_period = stockY[indexPivotDate - lookback_period:indexPivotDate + trainLength]
 
-    x_train = normalized_x[indexPivotDate - lookback_period: indexPivotDate]
-    y_train = normalized_y[indexPivotDate - lookback_period: indexPivotDate]
-    x_test = normalized_x[indexPivotDate: indexPivotDate + trainLength]
-    y_test = normalized_y[indexPivotDate: indexPivotDate + trainLength]
-    
+    if normalize:
+        x_period = normalize_start_1(x_period)
+        y_period = normalize_start_1(y_period)
+
+    x_train = x_period[indexPivotDate - lookback_period: indexPivotDate]
+    y_train = y_period[indexPivotDate - lookback_period: indexPivotDate]
+    x_test = x_period[indexPivotDate: indexPivotDate + trainLength]
+    y_test = y_period[indexPivotDate: indexPivotDate + trainLength]
+
     return x_train, y_train, x_test, y_test
 
 def normalize_start_1(prices):

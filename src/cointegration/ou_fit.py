@@ -35,11 +35,11 @@ class OUFit:
 
     def getRangeBoundFrame(self, Z=1):
         cointpair_sigma = self.sigmaeq
-        OU_res = {
+        self.OU_res = {
             'mu_e': self.mu,
             'upper': self.mu + Z * cointpair_sigma,
             'lower': self.mu - Z * cointpair_sigma
         }
         cointresid_OUFit = pd.DataFrame(self.residuals, columns=['Residuals'])
-        cointresid_OUFit = cointresid_OUFit.assign(**OU_res)
-        return cointresid_OUFit, OU_res
+        cointresid_OUFit = cointresid_OUFit.assign(**self.OU_res)
+        return cointresid_OUFit, self.OU_res
