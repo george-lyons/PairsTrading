@@ -16,3 +16,27 @@ def fetch_prices_df(start_date, end_date, ticker_symbol):
     # Fetch the data
     df = yf.download(ticker_symbol, start=start_date, end=end_date, progress=False)
     return df
+
+
+def get_pivoted_test_train_data(stockX, stockY,
+                end_look_back_date = None,
+                lookback_period=365,
+                train_test_split_ratio=1):
+
+    #assertions
+    indexPivotDate = stockX.index.get_loc(end_look_back_date)
+    trainLength = train_test_split_ratio * lookback_period
+
+    #Test and train set
+    normalized_x = normalize_start_1(stockX[indexPivotDate - lookback_period:indexPivotDate + trainLength])
+    normalized_y = normalize_start_1(stockY[indexPivotDate - lookback_period:indexPivotDate + trainLength])
+
+    x_train = normalized_x[indexPivotDate - lookback_period: indexPivotDate]
+    y_train = normalized_y[indexPivotDate - lookback_period: indexPivotDate]
+    x_test = normalized_x[indexPivotDate: indexPivotDate + trainLength]
+    y_test = normalized_y[indexPivotDate: indexPivotDate + trainLength]
+    
+    return x_train, y_train, x_test, y_test
+
+def normalize_start_1(prices):
+    return prices/prices.iloc[0]

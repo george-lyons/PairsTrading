@@ -43,7 +43,7 @@ class regresion_ols:
         predicted_y = self.model.predict(x_predict)
         return predicted_y
 
-    def predict_residuals(self, X_test, Y_test):
+    def predict_residuals(self, Y_test, X_test):
         Y_pred = self.predict(X_test)   
         res_pred = Y_test - Y_pred
         return res_pred

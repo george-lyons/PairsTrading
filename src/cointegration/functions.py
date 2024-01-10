@@ -25,28 +25,28 @@ def find_high_correlation_pairs(self, corr_matrix, threshold=0.9):
                 high_corr_pairs.append((assets[i], assets[j], corr_matrix.iloc[i, j]))       
     return high_corr_pairs
 
-def linear_regression(A,B, constant=True):
-    """
-    Perform linear regression on prices A and B
-    Parameters:
-    A (array-like): Prices of Asset A (dependent variable)
-    B (array-like): Prices of Asset B (independent variable)    """
-    if constant :
-        X = sm.add_constant(B)  # Adding a constant for the intercept
-    else :
-        X = B
-    model = OLS(A, X).fit()
-    df_results = pd.DataFrame({
-        'Estimate': model.params,
-        'SD of Estimate': model.bse,
-        't-Statistic': model.tvalues,
-        'p-value': model.pvalues
-    })
+# def linear_regression(Y,X, constant=True):
+#     """
+#     Perform linear OLS regression on prices A and B
+#     Parameters:
+#     A (array-like): Prices of Asset A (dependent variable)
+#     B (array-like): Prices of Asset B (independent variable)    """
+#     if constant :
+#         X = sm.add_constant(X)  # Adding a constant for the intercept
+#     model = OLS(Y, X).fit()
+#     df_results = pd.DataFrame({
+#         'Estimate': model.params,
+#         'SD of Estimate': model.bse,
+#         't-Statistic': model.tvalues,
+#         'p-value': model.pvalues
+#     })
+#     res =  pd.DataFrame(model.resid)
+#     res.columns = ['Residuals'] 
+#     return model,df_results,res
 
-    res =  pd.DataFrame(model.resid)
-    res.columns = ['Residuals']
-
-    return model,df_results,res
+# add a VAR function with info needed
+def var():
+    print()
 
 def pairwise_engle_granger_coint(series1, series2):
     """Engle granger test, using """

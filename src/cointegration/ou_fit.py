@@ -16,9 +16,9 @@ class OUFit:
         self.sigmaOU = None
         self.mu = None
 
-    def fit(self, lag=1):
+    def fit(self):
         # Add a constant to the residuals DataFrame for the intercept term
-        residuals_df = sm.add_constant(self.residuals.shift(lag).fillna(0))
+        residuals_df = sm.add_constant(self.residuals.shift(1).fillna(0))
         # Fit the AR(1) model using OLS
         cointresid_AR1 = OLS(self.residuals, residuals_df).fit()
         # print(cointresid_AR1.summary())

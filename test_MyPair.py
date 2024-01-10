@@ -23,6 +23,7 @@ from src.util.DataFetcher import *
 
 class TestPair(TestCase):
 
+
     def test_ols_same(self):
         tickers = ["BTC-USD", "ETH-USD"]
 
