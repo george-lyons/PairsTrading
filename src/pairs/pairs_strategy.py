@@ -58,13 +58,14 @@ class TradingPair:
         Fits the residual (training) to OU process
         Calculates the bounds (upper and lower and mean) for our process
         """
-        ou = OUFit(self.train_residuals, 1/self.tau)
-        ou.fit()
+        self.ou = OUFit(self.train_residuals, 1/self.tau)
+        self.ou.fit()
         #get range bound frame - for training set 
-        self.ou_range_bound_train_df, self.oU_res_train = ou.getRangeBoundFrame(z)
+        self.ou_range_bound_train_df, self.oU_res_train = self.ou.getRangeBoundFrame(z)
         # apply range bound frame - for test set 
         ou_range_bound_test_df = pd.DataFrame(self.test_residual_predict, columns=['Residuals'])
         self.ou_range_bound_test_df = ou_range_bound_test_df.assign(**self.oU_res_train)
+        self.z_norm_test_residuals = (self.train_residuals - self.oU_res_train['mu_e']) / self.ou.sigmaeq
         
 
     def _simple_returns(self):

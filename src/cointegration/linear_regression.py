@@ -48,9 +48,10 @@ class  regresion_ols:
         return predicted_y
 
     def predict_residuals(self, Y_test, X_test):
-        Y_pred = self.predict(X_test)   
-        res_pred = Y_test - Y_pred
-        return res_pred
+        # Y_pred = self.predict(X_test)   
+        # res_pred = Y_test - Y_pred
+        spread_pred = Y_test - self.c - self.beta * X_test
+        return spread_pred
     
     # def direction_accuracy(Y_test, Y_pred):
     #     return np.sum(np.sign(Y_pred) == np.sign(Y_test)) / len(Y_test) * 100
