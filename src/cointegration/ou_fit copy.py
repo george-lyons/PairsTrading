@@ -2,8 +2,6 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 from statsmodels.regression.linear_model import OLS
-from statsmodels.tools.tools import add_constant
-
 
 class OUFit:
     def __init__(self, residuals, tau):
@@ -34,24 +32,6 @@ class OUFit:
         self.denom = (1 - np.exp(-2 * self.theta * self.tau))
         self.sigmaeq = np.sqrt(self.sse * self.tau / self.denom)
         self.sigmaOU = self.sigmaeq * np.sqrt(2 * self.theta)
-
-    def fit2(self):
-         # OLS regression: OU SDE Solution Regression: e_t = C + B*et_1 + eps_t_tau
-        res_t = self.residuals [1:]
-        res_t_1 = self.residuals.shift(1).dropna()
-        x = add_constant(res_t_1)  # add intercept = columns of 1s to x_t
-        x.rename(columns={0: 'res_t_1'}, inplace=True)
-        ols_r = OLS(res_t, x).fit()
-        # Backtesting Parameters
-        self.mu_e = ols_r.params[0] / (1 - ols_r.params[1])  # equilibrium level = C/(1-B)
-        self.theta = - np.log(ols_r.params[1]) / self.tau  # speed of reversion = - log(B)/tau
-        self.half_l = np.log(2) / self.theta  # half life
-        
-        self.days = self.half_l / self.tau
-        self.sse = np.sum(ols_r.resid ** 2)
-        self.denom = (1 - np.exp(-2 * self.theta * self.tau))
-        self.sigma_eq = np.sqrt(self.sse * self.tau / self.denom)
-        self.sigma_OU = self.sigma_eq * np.sqrt(2 * self.theta)
 
     def getRangeBoundFrame(self, Z=1):
         cointpair_sigma = self.sigmaeq

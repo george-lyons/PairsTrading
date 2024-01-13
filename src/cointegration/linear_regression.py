@@ -1,3 +1,4 @@
+import re
 import pandas as pd
 import statsmodels.tsa.stattools as ts 
 import statsmodels.api as sm
@@ -38,6 +39,10 @@ class  regresion_ols:
         self.c = self.model.params[0]
         self.beta = self.model.params[1]
         print('Beta', self.beta, 'Constant', self.c)
+
+    def resid(self):
+        res = self.Y - self.c - self.beta * self.X
+        return res
 
     def predict(self, X):
         if not self.fitted:

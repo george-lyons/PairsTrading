@@ -7,71 +7,105 @@ import pandas as pd
 from hurst import compute_Hc
 from statsmodels.regression.linear_model import OLS
 from statsmodels.tsa.stattools import coint
-from src.pairs.coint_functions import ad_fuller,linear_regression,pairwise_engle_granger_coint,ad_fuller_to_df
+from src.pairs.coint_functions import *
+from src.util.DataFetcher import *
 from src.cointegration.linear_regression import regresion_ols
+from src.cointegration.ou_fit import OUFit
+from enum import Enum
+import numpy as np
 
 ## Initiate a Pair with a date and lookback window
 ## do stationarity checks on residuals
 ## Estimates are made from the lookback period for our bounds 
 ## put all data you want, have a lookback window as training period, and a look forward window as the test period
 class TradingPair:
+
     P_VALUE_THRESHOLD = 0.05
     LOOK_BACK_PERIOD = 365
-    TRAIN_TEST_SPLIT_PERC = 50
+    TEST_TRAIN_RATIO = 1
+
+    class Data(str, Enum):
+        TRAIN = 'train'
+        TEST = 'test'
 
     def __init__(self,
-                 stockX, stockY,
-                 end_look_back_date = None,
-                 lookback_period=LOOK_BACK_PERIOD,
-                 train_test_split=TRAIN_TEST_SPLIT_PERC):
-        #either end or we set to date in window
-        self.name = f"{stockX.name}, {stockY.name}"
-        self.lookback_period = lookback_period
+                    x_train, y_train,
+                    x_test, y_test):
+            self.x_train = x_train
+            self.y_train = y_train
+            self.x_test = x_test
+            self.y_test = y_test
+            self.tau = 365
+    
+            self.name = f"{self.y_train.name}, {self.x_train.name}"
+            #add t logs the train and test set details
+            print(f"Pair Created ({self.name})")
+            print(f"Start train {self.x_train.index.min()}) End train {self.x_train.index.max()})")
+            print(f"Start test {self.x_test.index.min()}) End test {self.x_test.index.max()})")
 
-        self.normalized_x = self._normalize_start_1(stockX)
-        self.normalized_y = self._normalize_start_1(stockY)
+            self._simple_returns()
+            self._train_lookback_ols_regression()
+            #we could stationary check the TEST set also (for info)
+            self._do_lookback_stationarity_checks()
+            self._ou_fit()
+            self._generate_trading_strategy()
 
-        print('(Pair Created', self.name, 'End Lookback Date', end_look_back_date, 'Lookback Period', lookback_period, ')')
-        if end_look_back_date != None:
-            try:
-                index_positionX = self.normalized_x.index.get_loc(end_look_back_date)
-                index_positionY = self.normalized_y.index.get_loc(end_look_back_date)
-                print(f"Index position for X {end_look_back_date}: {index_positionX}")
-                print(f"Index position for Y {end_look_back_date}: {index_positionY}")
-                assert index_positionX == index_positionY
-                self.end_look_back_index = index_positionX
-            except KeyError:
-                print(f"No data found for date: {end_look_back_date}")
-        else:
-            self.end_look_back_index = len(stockX)
+    def _generate_trading_strategy(self):
+        print('TODO TRADE STRAT')
 
-        # Calculate the start index for slicing - and
-        self.start_look_back_index = self.end_look_back_index - self.lookback_period
-        # Ensure start_index is not negative
-        self.start_look_back_index = max(self.start_look_back_index, 0)
-
-        # Retrieve the data from start_index to X (exclusive of X)
-        self.look_back_trading_x = self.normalized_x[self.start_look_back_index:self.end_look_back_index]
-        self.look_back_trading_y = self.normalized_y[self.start_look_back_index:self.end_look_back_index]
-        self.error = False
-        self._train_lookback_ols_regression()
-        self._do_lookback_stationarity_checks()
+    def _ou_fit(self, z=1):
+        """
+        Fits the residual (training) to OU process
+        Calculates the bounds (upper and lower and mean) for our process
+        """
+        self.ou = OUFit(self.train_residuals, 1/self.tau)
+        self.ou.fit()
+        #get range bound frame - for training set 
+        self.ou_range_bound_train_df, self.oU_res_train = self.ou.getRangeBoundFrame(z)
+        # apply range bound frame - for test set 
+        ou_range_bound_test_df = pd.DataFrame(self.test_residual_predict, columns=['Residuals'])
+        self.ou_range_bound_test_df = ou_range_bound_test_df.assign(**self.oU_res_train)
+        self.z_norm_test_residuals = (self.train_residuals - self.oU_res_train['mu_e']) / self.ou.sigmaeq
         
+
+    def _simple_returns(self):
+        self.returns_train_x = np.log(self.x_train).diff().dropna()
+        self.returns_train_y = np.log(self.y_train).diff().dropna()
+        self.returns_test_x = np.log(self.x_test).diff().dropna()
+        self.returns_test_y = np.log(self.y_test).diff().dropna()
+
+    #just for test train window
     def _normalize_start_1(self, prices):
         return prices/prices.iloc[0]
-    
-    #train on our lookback window
+
     def _train_lookback_ols_regression(self):
+        """
+        This method performs Ordinary Least Squares (OLS) regression on the training data.
+        It fits the regression model using y_train as the dependent variable and x_train
+        as the independent variable, stores the residuals, beta coefficient, and intercept (c),
+        and then predicts residuals for the test set using training model
+        """
         print('linear regression OLS lookback window')
-        regression = regresion_ols(self.look_back_trading_y, self.look_back_trading_x)
+        regression = regresion_ols(self.y_train, self.x_train)
         regression.fit()
-        self.look_back_residuals = regression.residuals
+        self.linear_regression_training_df = regression.df_results
+        self.train_residuals = regression.residuals
         self.beta = regression.beta
         self.c = regression.c
+        self._test_residuals_predict(regression)
+
+    def _test_residuals_predict(self, regression):
+        """
+        Predicts the residuals for the test set using the regression model fitted on the training data.
+        The residuals are stored in the instance variable test_residual_predict.
+        """
+        self.test_residual_predict = regression.predict_residuals(self.y_test, self.x_test)
 
     def _do_lookback_stationarity_checks(self):  
-        print('beta', self.beta, 'c', self.c)
-        adf_result, self.adf_lookback_df = ad_fuller_to_df(self.lb_residuals)
+        """
+        Performs stationarity checks on the lookback residuals using the Augmented Dickey-Fuller test.
+        """
+        adf_result, self.adf_lookback_df = ad_fuller_to_df(self.train_residuals)
         self.adf_p_value = adf_result[1]
         critical_values = adf_result[4]
         adf_statistic = adf_result[0]
@@ -80,23 +114,9 @@ class TradingPair:
     def is_valid_pair(self):
         return (self.adf_p_value < self.P_VALUE_THRESHOLD)
 
-    # ### Just put this into the CONSTRUCTOR - or not, but we may want to have an iterate through, recalculate after each period
-    # # we use the residual and calculation from our models
-    # # use the beta calc ahead for that
-    # # I am still so confused how to implement the long short, but we will figure this out
-    # def get_test_set_ahead(self, percentage=50):
-    #     #Percentag of the training set to look ahead and test on unknown data
-    #     test_length = (percentage/100) * self.lookback_period
-    #     # Retrieve the data from start_index to X (exclusive of X)
-    #     # we could re
-    #     test_period_x = self.normalized_x[self.end_look_back_index:test_length]
-    #     test_period_y = self.normalized_y[self.end_look_back_index:test_length]
-    #     print()
-
-
     def __repr__(self):
-        s = f"Pair [{self.normalized_x}, {self.normalized_y.name}]"
-        s += f"\n\tp-value: {self.p_value}"
+        s = f"Pair [{self.x_train.name}, {self.y_train.name}]"
+        s = f"\n\tp-value: {self.adf_p_value}"
         # s += f"\n\tMean crosses: {self.mean_crosses}"
         # s += f"\n\tProfitable trades (%): {self.profitable_trades_perc}"
         # s += f"\n\tAverage holding period (days): {self.average_holding_period}"
