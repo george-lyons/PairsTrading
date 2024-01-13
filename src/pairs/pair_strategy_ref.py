@@ -89,7 +89,148 @@ class PairStrategy(object):
         }) 
         self.OLS_STATS_DICT = {'spread_calc': self.res_calc, 'c': self.c, 'b': self.b}
 
+    # def plot_pair(self):
+    #     fig, (ax_stockX, ax_spread) = plt.subplots(2, 1)
 
+    #     ax_stockX.title.set_text("Stocks prices")
+    #     ax_spread.title.set_text("Normalized spread")
+
+    #     ax_stockX.plot(self.stockX_trading, color="b", label=self.stockX_trading.name)
+    #     ax_stockY = ax_stockX.twinx()
+    #     ax_stockY.plot(self.stockY_trading, color="y", label=self.stockY_trading.name)
+
+    #     ax_spread.plot(self.normalized_spread_trading[-self.trading_period:])
+    #     ax_spread.axhline(self.trading_bound, linestyle='--', color="g", label="Trading bound")
+    #     ax_spread.axhline(-self.trading_bound, linestyle='--', color="g")
+    #     ax_spread.axhline(self.stop_loss, linestyle='--', color="r", label="Stop loss")
+    #     ax_spread.axhline(-self.stop_loss, linestyle='--', color="r")
+
+    #     ax_spread.plot_date([self.normalized_spread_trading.index[i] for i in self.open_positions],
+    #                         [self.normalized_spread_trading[i] for i in self.open_positions], label='Open position',
+    #                         marker='^', markeredgecolor='b', markerfacecolor='b', markersize=16)
+    #     ax_spread.plot_date([self.normalized_spread_trading.index[i] for i in self.closed_positions],
+    #                         [self.normalized_spread_trading[i] for i in self.closed_positions], label='Closed position',
+    #                         marker='P', markeredgecolor='g', markerfacecolor='g', markersize=16)
+    #     ax_spread.plot_date([self.normalized_spread_trading.index[i] for i in self.stop_losses],
+    #                         [self.normalized_spread_trading[i] for i in self.stop_losses], label='Stop loss',
+    #                         marker='X', markeredgecolor='r', markerfacecolor='r', markersize=16)
+
+    #     ax_stockX.legend()
+    #     ax_stockY.legend()
+    #     ax_spread.legend()
+
+    #     fig.set_size_inches(18.5, 10.5, forward=True)
+    #     plt.savefig(self.name + '.jpg', dpi=400)
+        
+
+    # def plot_data(self):
+    #     fig, (ax_stockX, ax_spread) = plt.subplots(2, 1)
+    #     ''' Plots original data and trading indicators .
+    #     '''
+    #     if self.results is None:
+    #         print('No results to plot yet. Run a strategy.')
+    #     title = '%s | slip = %d, sd = %d' % ('Spread and Position', self.slip, self.z)
+
+    #     # fig, ax1 = plt.subplots()
+    #     ax2 = ax1.twinx()
+    #     plt.title(title)
+    #     ax1.plot(self.results.index, self.results['full_resid'])
+    #     ax2.plot(self.results.index, self.results['position'], 'ro')
+    #     ax1.set_xlabel('Time')
+    #     ax1.set_ylabel('Price', color='g')
+    #     ax2.set_ylabel('Position', color='r')
+    #     plt.show()
+
+    def plot_pair(self, results):
+        fig, (ax_stockX, ax_spread, ax_position) = plt.subplots(3, 1)
+        spread = results['full_resid']
+        position = results['position']
+
+        upper_bound = results['upper_bound'].iloc[0]
+        lower_bound = results['lower_bound'].iloc[0]
+        mu = results['mu'].iloc[0]
+
+
+        ax_stockX.title.set_text("Stocks prices")
+        ax_spread.title.set_text("Residual")
+   
+        ax_spread.plot(spread)
+        ax_stockX.plot(self.x_full, color="b", label=self.x_full.name)
+        ax_stockY = ax_stockX.twinx()
+        ax_stockY.plot(self.y_full, color="y", label=self.y_full.name)
+
+
+
+        ax_spread.axhline(upper_bound, linestyle='--', color="g", label="upper bound")
+        ax_spread.axhline(lower_bound, linestyle='--', color="r", label="lower bound")
+        ax_spread.axhline(mu, linestyle='--', color="orange", label="mu e")
+
+
+        ax_position.title.set_text("Position")
+        ax_position.plot(position, color="g", label=position.name)
+
+        # ax_spread.axhline(self.stop_loss, linestyle='--', color="r", label="Stop loss")
+        # ax_spread.axhline(-self.stop_loss, linestyle='--', color="r")
+
+        # ax_spread.plot_date([spread.index[i] for i in self.open_positions],
+        #                     [spread[i] for i in self.open_positions], label='Open position',
+        #                     marker='^', markeredgecolor='b', markerfacecolor='b', markersize=16)
+        # ax_spread.plot_date([self.normalized_spread_trading.index[i] for i in self.closed_positions],
+        #                     [self.normalized_spread_trading[i] for i in self.closed_positions], label='Closed position',
+        #                     marker='P', markeredgecolor='g', markerfacecolor='g', markersize=16)
+        # ax_spread.plot_date([self.normalized_spread_trading.index[i] for i in self.stop_losses],
+        #                     [self.normalized_spread_trading[i] for i in self.stop_losses], label='Stop loss',
+        #                     marker='X', markeredgecolor='r', markerfacecolor='r', markersize=16)
+
+        ax_stockX.legend()
+        ax_stockY.legend()
+        ax_spread.legend()
+      
+        ax_position.legend()
+
+
+        fig.set_size_inches(18.5, 10.5, forward=True)
+        plt.savefig(self.name + '.jpg', dpi=400)
+
+
+    # def plot_pair(self, results):
+    #     fig, (ax_stockX, ax_spread) = plt.subplots(2, 1)
+    #     spread = results['full_resid']
+    #     upper_bound = results['upper_bound'].iloc[0]
+    #     lower_bound = results['lower_bound'].iloc[0]
+    #     mu = results['mu'].iloc[0]
+
+    #     ax_stockX.title.set_text("Stocks prices")
+    #     ax_spread.title.set_text("Residual")
+    #     ax_stockX.plot(self.x_full, color="b", label=self.x_full.name)
+    #     ax_stockY = ax_stockX.twinx()
+    #     ax_stockY.plot(self.y_full, color="y", label=self.y_full.name)
+
+    #     ax_spread.plot(spread)
+    #     ax_spread.axhline(upper_bound, linestyle='--', color="g", label="upper bound")
+    #     ax_spread.axhline(lower_bound, linestyle='--', color="r", label="lower bound")
+    #     ax_spread.axhline(mu, linestyle='--', color="orange", label="mu e")
+
+
+    #     # ax_spread.axhline(self.stop_loss, linestyle='--', color="r", label="Stop loss")
+    #     # ax_spread.axhline(-self.stop_loss, linestyle='--', color="r")
+
+    #     # ax_spread.plot_date([spread.index[i] for i in self.open_positions],
+    #     #                     [spread[i] for i in self.open_positions], label='Open position',
+    #     #                     marker='^', markeredgecolor='b', markerfacecolor='b', markersize=16)
+    #     # ax_spread.plot_date([self.normalized_spread_trading.index[i] for i in self.closed_positions],
+    #     #                     [self.normalized_spread_trading[i] for i in self.closed_positions], label='Closed position',
+    #     #                     marker='P', markeredgecolor='g', markerfacecolor='g', markersize=16)
+    #     # ax_spread.plot_date([self.normalized_spread_trading.index[i] for i in self.stop_losses],
+    #     #                     [self.normalized_spread_trading[i] for i in self.stop_losses], label='Stop loss',
+    #     #                     marker='X', markeredgecolor='r', markerfacecolor='r', markersize=16)
+
+    #     ax_stockX.legend()
+    #     ax_stockY.legend()
+    #     ax_spread.legend()
+
+    #     fig.set_size_inches(18.5, 10.5, forward=True)
+    #     plt.savefig(self.name + '.jpg', dpi=400)
 
     # def plot_strat(self, z=1, slip=):
     #     ''' 
@@ -144,7 +285,7 @@ class PairStrategy(object):
         
 
 
-    def __level_crosses(self, series, level=2):
+    def __level_crosses(self, series, level):
         change = []
         for i, el in enumerate(series):
             if i != 0 and el > level and series[i - 1] < level:
@@ -154,6 +295,9 @@ class PairStrategy(object):
             else:
                 change.append(0)
         return change
+    
+
+
 
     def run_strategy(self, z=1, slip=1):
         ''' 
@@ -174,19 +318,28 @@ class PairStrategy(object):
         data['mu'] = mu
         data['dist'] = data['full_resid'] - data['mu']
 
+
         upper_bound = mu + sigma * z
         lower_bound = mu - sigma * z
+
+        # add stop loss
 
         print(upper_bound)
         print(lower_bound)
         data['lower_bound'] = lower_bound
         data['upper_bound'] = upper_bound
         data = data.copy().dropna()
-        # # positions
+        # # # positions
         data['position'] = np.where(data['dist'].shift(1) * data['dist'] < 0, 0, np.nan)
         data['position'] = np.where(data['full_resid'] > data['upper_bound'], -1, data['position'])  # sell signals
         data['position'] = np.where(data['full_resid'] < data['lower_bound'], 1, data['position'])  # buy signals
 
+        data['position'].ffill(inplace=True)  # fill forward na values.
+        data['position'].shift(self.slip)  # enter slippage assumption
+        data['position'].fillna(0, inplace=True)  # fill na gaps.
+
+
+        # twoooooo
         data['upper_cross'] = self.__level_crosses(spread, level=upper_bound)
         data['lower_cross'] = self.__level_crosses(spread, level=lower_bound)
         # self.upper_stop = self.__level_crosses(spread, level=self.stop_loss)
@@ -195,9 +348,6 @@ class PairStrategy(object):
         # self.mean_crosses = self.mean.count(1) + self.mean.count(-1)
 
 
-        # data['position'].ffill(inplace=True)  # fill forward na values.
-        # data['position'].shift(self.slip)  # enter slippage assumption
-        # data['position'].fillna(0, inplace=True)  # fill na gaps.
         # # returns:
         # data['strategy'] = (data['position'] * data['return']) + 0  # add zero to avoid negative zeros
         # data['fees'] = np.where(data['position'] == data['position'].shift(1), 0, self.trading_fee)
@@ -221,52 +371,6 @@ class PairStrategy(object):
         # return {'strat cum P&L': round(aperf_net, 4), 'cum perf vs bmk': round(operf_net, 4), 'strat vol': round(a_vol, 4), 'strat sharpe': round(sharpe_ratio, 4)}
         # return {'strat cum P&L': round(aperf_net, 4)}
 
-
-    # # github (1)
-    # def _ou_fit(self):
-    #     # OLS regression: OU SDE Solution Regression: e_t = C + B*et_1 + eps_t_tau
-    #     res_t = self.res_calc[1:]
-    #     res_t_1 = self.res_calc.shift(1).dropna()
-    #     x = add_constant(res_t_1)  # add intercept = columns of 1s to x_t
-    #     x.rename(columns={0: 'res_t_1'}, inplace=True)
-    #     ols_r = OLS(res_t, x).fit()
-    #     # Backtesting Parameters
-    #     mu_e = ols_r.params[0] / (1 - ols_r.params[1])  # equilibrium level = C/(1-B)
-    #     tau = 1 / self.tau_denom  # daily data frequency (crypto)
-    #     theta = - np.log(ols_r.params[1]) / tau  # speed of reversion = - log(B)/tau
-    #     half_l = np.log(2) / theta  # half life
-    #     sigma_OU = np.sqrt(2 * theta * np.var(ols_r.resid) / (1 - np.exp(-2 * theta * tau)))  # diffusion over small time scale (volatility coming from small ups and downs of BM)
-    #     sigma_eq = sigma_OU / np.sqrt(2 * theta)  # use to determine exit/trading points = mu_e +/- sigma_eq
-    #     # Backtesting Spread:
-    #     full_resid = self.y_full - self.c - self.b * self.x_full    # using new dates - append to end
-    #     full_z_resid = (full_resid - mu_e) / sigma_eq
-    #     # output: spread and parameters
-    #     self.OU_PARAMS_DICT = {'full_z_resid': full_z_resid, 'full_resid': full_resid, 'mu_e': mu_e, 'tau': tau, 'theta': theta,'sigma_OU': sigma_OU, 'sigma_eq': sigma_eq, 'b': self.b, 'half life': half_l}
- 
-    # github 2) combins
-    # def _ou_fit(self):
-    #     # OLS regression: OU SDE Solution Regression: e_t = C + B*et_1 + eps_t_tau
-    #     res_t = self.res_calc[1:]
-    #     res_t_1 = self.res_calc.shift(1).dropna()
-    #     x = add_constant(res_t_1)  # add intercept = columns of 1s to x_t
-    #     x.rename(columns={0: 'res_t_1'}, inplace=True)
-    #     ols_r = OLS(res_t, x).fit()
-    #     # Backtesting Parameters
-    #     self.mu_e = ols_r.params[0] / (1 - ols_r.params[1])  # equilibrium level = C/(1-B)
-    #     tau = 1 / self.tau_denom  # daily data frequency (crypto)
-    #     theta = - np.log(ols_r.params[1]) / tau  # speed of reversion = - log(B)/tau
-    #     half_l = np.log(2) / theta  # half life
-    #     days = half_l / tau
-    #     sse = np.sum(ols_r.resid ** 2)
-    #     denom = (1 - np.exp(-2 * theta * tau))
-    #     sigma_eq = np.sqrt(sse * tau / denom)
-    #     sigma_OU = sigma_eq * np.sqrt(2 * theta)
-    #     # Backtesting Spread - full data set test and train (lookback) and look forward window
-    #     full_resid = self.y_full - self.c - self.b * self.x_full  # using new dates - append to end
-    #     full_z_resid = (full_resid - self.mu_e) / sigma_eq
-    #     # output: spread and parameters
-    #     self.OU_PARAMS_DICT = {'full_z_resid': full_z_resid, 'full_resid': full_resid, 'mu_e': self.mu_e, 'tau': tau, 'theta': theta,'sigma_OU': sigma_OU, 'sigma_eq': sigma_eq, 'b': self.b, 'half life': half_l, 'days': days}
-        
     # #lectures
     def _ou_fit(self):
         tau = 1 / self.tau_denom 
@@ -288,7 +392,6 @@ class PairStrategy(object):
         sigmaOU = sigmaeq * np.sqrt(2*theta) 
 
         full_resid = self.y_full - self.c - self.b * self.x_full  # using new dates - append to end
-
         full_z_resid = (full_resid - mu) / sigmaeq
         # output: spread and parameters
         self.OU_PARAMS_DICT = {'price': full_resid, 'full_resid': full_resid, 'mu_e': mu, 'tau': tau, 'theta': theta,'sigma_OU': sigmaOU, 'sigma_eq': sigmaeq, 'b': self.b, 'half life': half_life, 'days': days}
