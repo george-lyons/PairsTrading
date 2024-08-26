@@ -34,6 +34,7 @@ class OUFit:
         self.denom = (1 - np.exp(-2 * self.theta * self.tau))
         self.sigmaeq = np.sqrt(self.sse * self.tau / self.denom)
         self.sigmaOU = self.sigmaeq * np.sqrt(2 * self.theta)
+        self.OU_PARAMS_DICT = {'mu_e': self.mu_e, 'tau': self.tau, 'theta': self.theta,'sigma_OU': self.sigma_OU, 'sigma_eq': self.sigma_eq, 'half life': self.half_l, 'days': self.days}
 
     def fit2(self):
          # OLS regression: OU SDE Solution Regression: e_t = C + B*et_1 + eps_t_tau
@@ -52,6 +53,7 @@ class OUFit:
         self.denom = (1 - np.exp(-2 * self.theta * self.tau))
         self.sigma_eq = np.sqrt(self.sse * self.tau / self.denom)
         self.sigma_OU = self.sigma_eq * np.sqrt(2 * self.theta)
+        self.OU_PARAMS_DICT2 = {'mu_e': self.mu_e, 'tau': self.tau, 'theta': self.theta,'sigma_OU': self.sigma_OU, 'sigma_eq': self.sigma_eq, 'half life': self.half_l, 'days': self.days}
 
     def getRangeBoundFrame(self, Z=1):
         cointpair_sigma = self.sigmaeq

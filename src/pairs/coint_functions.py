@@ -26,8 +26,12 @@ def find_high_correlation_pairs(self, corr_matrix, threshold=0.9):
     return high_corr_pairs
 
 # add a VAR function with info needed
-def var():
-    print()
+def var(merged_returns, lags):
+    model = VAR(merged_returns)
+    # Fit the model with the best lag that's greater than zero
+    fitted_model = model.fit(lags)
+    # Print the summary of the fitted model
+    return fitted_model
 
 def pairwise_engle_granger_coint(series1, series2):
     """Engle granger test, using """
